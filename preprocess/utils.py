@@ -7,8 +7,11 @@ from bs4 import BeautifulSoup
 def get_current_price(text):
     if isinstance(text, str):
         # If text is already a price like "£60.00", return it directly
-        if re.match(r'£\d+\.\d{2}', text):
-            return text
+        currency_symbols = r'[\$\£\€]'
+        price_pattern = rf'{currency_symbols}\s?\d+(?:,\d{{3}})*(?:\.\d{{2}})?'
+        if re.fullmatch(price_pattern, text.strip()):
+            return text.strip()
+        
         # Extract price from "Current price: £XXX.XX" format
         match = re.search(r'Current price:\s*(£\d+\.\d{2})', text)
         return match.group(1) if match else text  # Keep original text if no match

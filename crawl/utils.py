@@ -20,14 +20,6 @@ def save_batch_to_data_lake(data, collection_name):
     collection = db[collection_name]
     collection.insert_many(data)
 
-def get_mongo_product_details_by_url(url):
-    collection = db["product_detail"]
-    product_details = list(collection.find({'url': url})) 
-    return [
-        {**doc, '_id': str(doc['_id'])}
-        for doc in product_details
-    ]
-
 def get_uncrawled_page_urls():
     collection = db["product_list"]
     distinct_urls_product_list = collection.distinct("url")
@@ -58,7 +50,7 @@ def get_distinct_urls_postgres():
 def get_unsuccessful_urls():
     collection = db["product_detail"]
     distinct_urls_product_detail = collection.distinct("url")
-    distinct_urls_postgres =get_distinct_urls_postgres()
+    distinct_urls_postgres = get_distinct_urls_postgres()
     unsuccessful_urls = list(set(distinct_urls_product_detail) - set(distinct_urls_postgres))
     return unsuccessful_urls 
 

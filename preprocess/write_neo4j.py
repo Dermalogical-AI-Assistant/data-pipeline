@@ -1,8 +1,6 @@
 from common.constant import NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD
 from preprocess.utils import convert_obj_to_string
 from neo4j import GraphDatabase
-import json
-import ast
 
 class Neo4jConnector:
     def __init__(self):
@@ -21,13 +19,18 @@ class Neo4jConnector:
             # Create Product node
             session.write_transaction(self._create_product_node, product_data)
             
+            analysis = product_data.get('ingredients_analysis')
+            
             # Create Ingredients and Relationships
-            if product_data.get('ingredients_analysis'):
-                analysis = product_data['ingredients_analysis']
+            if analysis and isinstance(analysis, dict) :
                 session.write_transaction(self._process_ingredients, product_data['url'], analysis)
     
     @staticmethod
     def _create_product_node(tx, product):
+        ingredients_analysis = product.get('ingredients_analysis', {})
+        if isinstance(ingredients_analysis, dict) == False:
+            ingredients_analysis = {}
+        
         MERGE_PRODUCT_QUERY = """
             MERGE (p:Product {url: $url})
             SET p._id = $_id,
@@ -55,10 +58,10 @@ class Neo4jConnector:
             how_to_use=product['how_to_use'],
             ingredient_benefits=product['ingredient_benefits'],
             full_ingredients_list=product['full_ingredients_list'],
-            ewg=convert_obj_to_string(product.get('ingredients_analysis', {}).get('ewg')),
-            natural=convert_obj_to_string(product.get('ingredients_analysis', {}).get('natural')),
-            analysis_text=product.get('ingredients_analysis', {}).get('text', None),
-            analysis_description=product.get('ingredients_analysis', {}).get('description', '')
+            ewg=convert_obj_to_string(ingredients_analysis.get('ewg')),
+            natural=convert_obj_to_string(ingredients_analysis.get('natural')),
+            analysis_text=ingredients_analysis.get('text', None),
+            analysis_description=ingredients_analysis.get('description', '')
         )
     
     @staticmethod
@@ -155,38 +158,24 @@ class Neo4jConnector:
                     title=notable_data['title']
                 )
 
-def write_to_neo4j(cleaned_df, batch_id):
-    if cleaned_df.count() > 0:
-        df = cleaned_df.toPandas()
-        
-        neo4j = Neo4jConnector()
-        
-        for _, row in df.iterrows():
-            analysis_str = row["ingredients_analysis"]
-            try:
-                analysis = ast.literal_eval(analysis_str) 
-            except Exception as e:
-                print("Failed to parse analysis string:", e)
-                analysis = {}
+def write_product_to_neo4j(product):
+    neo4j = Neo4jConnector()
 
-            product_data = {
-                "_id": row["_id"],
-                "img": row["img"],
-                "title": row["title"],
-                "price": row["price"],
-                "url": row["url"],
-                "skincare_concern": row["skincare_concern"],
-                "description": row["description"],
-                "how_to_use": row["how_to_use"],
-                "ingredient_benefits": row["ingredient_benefits"],
-                "full_ingredients_list": row["full_ingredients_list"],
-                "ingredients_analysis": analysis
-            }
-            
-            neo4j.create_product_graph(product_data)
-        
-        neo4j.close()
-        print(f"Successfully wrote batch {batch_id} to Neo4j")
-    else:
-        print("No valid data to write to Neo4j")
-        
+    product_data = {
+        "_id": product["_id"],
+        "img": product["img"],
+        "title": product["title"],
+        "price": product["price"],
+        "url": product["url"],
+        "skincare_concern": product["skincare_concern"],
+        "description": product["description"],
+        "how_to_use": product["how_to_use"],
+        "ingredient_benefits": product["ingredient_benefits"],
+        "full_ingredients_list": product["full_ingredients_list"],
+        "ingredients_analysis": product["ingredients_analysis"]
+    }
+    
+    neo4j.create_product_graph(product_data)
+    
+    neo4j.close()
+    

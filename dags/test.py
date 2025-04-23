@@ -1,3 +1,0 @@
-from dags.kafka_stream import stream_crawl_lookfantastic_products
-
-stream_crawl_lookfantastic_products()

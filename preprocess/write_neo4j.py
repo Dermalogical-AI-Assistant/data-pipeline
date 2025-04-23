@@ -21,7 +21,6 @@ class Neo4jConnector:
             # Create Product node
             session.write_transaction(self._create_product_node, product_data)
             
-            print('Create Ingredients and Relationships')
             # Create Ingredients and Relationships
             if product_data.get('ingredients_analysis'):
                 analysis = product_data['ingredients_analysis']

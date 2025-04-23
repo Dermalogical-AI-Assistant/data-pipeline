@@ -18,18 +18,21 @@ def write_to_postgres(cleaned_df, batch_id):
     cleaned_df_to_insert = cleaned_df.select(*columns_to_insert)
     if cleaned_df_to_insert.count() > 0:
         # Write with explicit SSL configuration
-        cleaned_df_to_insert.write \
-            .format("jdbc") \
-            .option("url", postgres_config["url"]) \
-            .option("dbtable", postgres_config["table"]) \
-            .option("user", postgres_config["user"]) \
-            .option("password", postgres_config["password"]) \
-            .option("driver", postgres_config["driver"]) \
-            .option("batchsize", postgres_config["batchsize"]) \
-            .option("ssl", postgres_config["ssl"]) \
-            .option("sslmode", postgres_config["sslmode"]) \
-            .mode("append") \
-            .save()
+        try:
+            cleaned_df_to_insert.write \
+                .format("jdbc") \
+                .option("url", postgres_config["url"]) \
+                .option("dbtable", postgres_config["table"]) \
+                .option("user", postgres_config["user"]) \
+                .option("password", postgres_config["password"]) \
+                .option("driver", postgres_config["driver"]) \
+                .option("batchsize", postgres_config["batchsize"]) \
+                .option("ssl", postgres_config["ssl"]) \
+                .option("sslmode", postgres_config["sslmode"]) \
+                .mode("append") \
+                .save()
+        except Exception as e:
+            print(f'Error when writing to Posgres: {str(e)}')
         
         print(f"Successfully wrote batch {batch_id} to PostgreSQL")
     else:

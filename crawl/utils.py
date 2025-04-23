@@ -1,6 +1,7 @@
 from pymongo import MongoClient
-from common.constant import MONGO_DB_URL
+from common.constant import MONGO_DB_URL, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST, POSTGRES_DB, COSMETICS_PRODUCT_TABLE
 import json
+import psycopg2
 
 client = MongoClient(MONGO_DB_URL)
 db = client['data_lake']
@@ -18,23 +19,48 @@ def save_to_data_lake(product, collection_name):
 def save_batch_to_data_lake(data, collection_name):
     collection = db[collection_name]
     collection.insert_many(data)
-    
+
+def get_mongo_product_details_by_url(url):
+    collection = db["product_detail"]
+    product_details = list(collection.find({'url': url})) 
+    return [
+        {**doc, '_id': str(doc['_id'])}
+        for doc in product_details
+    ]
+
 def get_uncrawled_page_urls():
-    collection = db['product_list']
-    uncrawled_page_urls = collection.find({'is_crawled': { '$exists': False }}).limit(10).distinct('url')
+    collection = db["product_list"]
+    distinct_urls_product_list = collection.distinct("url")
+    collection = db["product_detail"]
+    distinct_urls_product_detail = collection.distinct("url")
+    uncrawled_page_urls = list(set(distinct_urls_product_list) - set(distinct_urls_product_detail))
     return uncrawled_page_urls
 
-def check_crawled_page_url(page_url):
-    collection = db['product_list']
-    result = collection.update_many(
-        {'url': page_url},
-        {'$set': {'is_crawled': True}}
+def get_distinct_urls_postgres():
+    conn = psycopg2.connect(
+        host=POSTGRES_HOST,
+        database=POSTGRES_DB,
+        user=POSTGRES_USER,
+        password=POSTGRES_PASSWORD
     )
-    
-    if result.modified_count > 0:
-        print(f"Pages with URL {page_url} marked as crawled.")
-    else:
-        print(f"Pages with URL {page_url} not found or already marked as crawled.")
+
+    cur = conn.cursor()
+
+    cur.execute(f"SELECT DISTINCT url FROM {COSMETICS_PRODUCT_TABLE};")
+    distinct_urls_postgres = cur.fetchall()
+
+    distinct_urls_postgres = [url[0] for url in distinct_urls_postgres]
+
+    cur.close()
+    conn.close()
+    return distinct_urls_postgres
+
+def get_unsuccessful_urls():
+    collection = db["product_detail"]
+    distinct_urls_product_detail = collection.distinct("url")
+    distinct_urls_postgres =get_distinct_urls_postgres()
+    unsuccessful_urls = list(set(distinct_urls_product_detail) - set(distinct_urls_postgres))
+    return unsuccessful_urls 
 
 def get_products_by_url(url):
     collection = db['product_list']
@@ -44,9 +70,3 @@ def get_products_by_url(url):
         product['_id'] = str(product['_id'])
         products.append(product)
     return products
-
-def save_current_process(url):
-    with open('./crawl/data/process.txt', 'w') as file:
-        file.write(url)
-    print(f'Done {url}')
-    

@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-from crawl.utils import save_to_data_lake
+from airflow_modules.crawl.utils import save_to_data_lake
     
 def get_list_products(page_soup, skincare_concern):
     list_products = page_soup.find_all('product-card-wrapper', {'data-e2e': lambda x: x and x.startswith('search_list-item')}) # len=32

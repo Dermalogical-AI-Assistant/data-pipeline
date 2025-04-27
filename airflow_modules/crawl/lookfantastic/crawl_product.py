@@ -4,7 +4,7 @@ import time
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
-from crawl.utils import save_batch_to_data_lake, get_products_by_url
+from airflow_modules.crawl.utils import save_batch_to_data_lake, get_products_by_url
 
 def get_component_need_scrolling(selenium_driver, data_tracking_push, aria_labelledby):
     try:

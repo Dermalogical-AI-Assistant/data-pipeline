@@ -1,5 +1,5 @@
 from pymongo import MongoClient
-from common.constant import MONGO_DB_URL, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST, POSTGRES_DB, COSMETICS_PRODUCT_TABLE
+from airflow_modules.common.constant import MONGO_DB_URL, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST, POSTGRES_DB, COSMETICS_PRODUCT_TABLE
 import json
 import psycopg2
 
@@ -19,6 +19,14 @@ def save_to_data_lake(product, collection_name):
 def save_batch_to_data_lake(data, collection_name):
     collection = db[collection_name]
     collection.insert_many(data)
+
+def get_mongo_product_details_by_url(url):
+    collection = db["product_detail"]
+    product_details = list(collection.find({'url': url})) 
+    return [
+        {**doc, '_id': str(doc['_id'])}
+        for doc in product_details
+    ]
 
 def get_uncrawled_page_urls():
     collection = db["product_list"]

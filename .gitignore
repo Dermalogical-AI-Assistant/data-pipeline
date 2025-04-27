@@ -4,4 +4,8 @@ __pycache__
 .env
 crawl/data
 venv10
+logs/
+webserver_config.py
+airflow.cfg
+airflow-webserver.pid
 note.txt

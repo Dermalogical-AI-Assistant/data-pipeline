@@ -1,3 +1,0 @@
-from main import crawl_lookfantastic_product_detail
-
-crawl_lookfantastic_product_detail()

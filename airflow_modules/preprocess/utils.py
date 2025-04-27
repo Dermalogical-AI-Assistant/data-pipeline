@@ -48,7 +48,8 @@ def preprocess_ingredients(full_ingredients):
     return ', '.join(ingredients)
 
 def get_ingredients_analysis(full_ingredients):
-    if full_ingredients is None:
+    print(f'full_ingredients={full_ingredients}')
+    if not full_ingredients or full_ingredients!='null':
         return None
     data = {
         'ingredients': full_ingredients

@@ -1,0 +1,25 @@
+FROM apache/airflow:2.6.0-python3.9
+
+USER root
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+USER airflow
+WORKDIR /opt/airflow
+
+ENV PATH="$PATH:/home/airflow/.local/bin"
+
+RUN python -m pip install --upgrade pip
+
+COPY requirements.txt .
+RUN pip install --user -r requirements.txt
+
+COPY airflow_modules ./airflow_modules
+COPY dags ./dags
+COPY .env .
+
+CMD ["bash", "-c", "airflow webserver"]

@@ -50,7 +50,7 @@ def crawl_a_page(skincare_concern_url, skincare_concern):
         get_list_products(page_soup=page, skincare_concern=skincare_concern)
 
 def get_list_skincare_concern_urls():
-    with open('./crawl/lookfantastic/list_skincare_concerns.txt', 'r') as file:
+    with open('./airflow_modules/crawl/lookfantastic/list_skincare_concerns.txt', 'r') as file:
         list_skincare_concern_urls = file.readlines()
         
     list_skincare_concern_urls = [skin_concern_url.replace('\n', '') for skin_concern_url in  list_skincare_concern_urls]

@@ -1,28 +1,4 @@
-version: '3'
 services:
-  # webserver:
-  #   build:
-  #     context: .
-  #     dockerfile: dockerfiles/Dockerfile.webserver
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #   environment:
-  #     AIRFLOW__CORE__EXECUTOR: SequentialExecutor
-  #     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
-  #     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-  #     PYTHONPATH: /opt/airflow:/opt/airflow/airflow_modules
-  #     AIRFLOW__CORE__FERNET_KEY: ${FERNET_KEY:-your_default_fernet_key}
-  #     AIRFLOW__WEBSERVER__SECRET_KEY: ${WEBSERVER_SECRET_KEY:-your_default_secret_key}
-  #   ports:
-  #     - "8080:8080"
-  #   healthcheck:
-  #     test: ['CMD-SHELL', "[ -f /opt/airflow/airflow-webserver.pid ]"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-  #   networks:
-  #     - confluent
   webserver:
     image: apache/airflow:2.7.0-python3.10
     command: webserver
@@ -33,6 +9,8 @@ services:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
       PYTHONPATH: /opt/airflow:/opt/airflow/airflow_modules
+      AIRFLOW_VAR_FROM_FILE: /opt/airflow/.env
+      AIRFLOW__WEBSERVER__SECRET_KEY: "YourSuperSecretKeyHere"
     logging:
       options:
         max-size: 10m
@@ -54,7 +32,6 @@ services:
         /home/airflow/.local/bin/airflow db migrate && \
         exec /home/airflow/.local/bin/airflow webserver
       "
-
     healthcheck:
       test: ['CMD-SHELL', "[ -f /opt/airflow/airflow-webserver.pid ]"]
       interval: 30s
@@ -62,25 +39,43 @@ services:
       retries: 3
     networks:
       - confluent
-  
-  # scheduler:
-  #   image: apache/airflow:2.6.0-python3.9
-  #   depends_on:
-  #     webserver:
-  #       condition: service_healthy
-  #   volumes:
-  #     - ./airflow_modules:/opt/airflow/airflow_modules  
-  #     - ./dags:/opt/airflow/dags
-  #     - ./requirements.txt:/opt/airflow/requirements.txt
-  #     - ./.env:/opt/airflow/.env
-  #   environment:
-  #     AIRFLOW__CORE__EXECUTOR: SequentialExecutor
-  #     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
-  #     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-  #     PYTHONPATH: /opt/airflow:/opt/airflow/airflow_modules
-  #   command: bash -c "pip install -r ./requirements.txt && airflow db upgrade && airflow scheduler"
-  #   networks:
-  #     - confluent
+
+  scheduler:
+    image: apache/airflow:2.6.0-python3.9
+    depends_on:
+      webserver:
+        condition: service_healthy
+    volumes:
+      - ./airflow_modules:/opt/airflow/airflow_modules  
+      - ./dags:/opt/airflow/dags
+      - ./requirements.txt:/opt/airflow/requirements.txt
+      - ./.env:/opt/airflow/.env
+    environment:
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      PYTHONPATH: /opt/airflow:/opt/airflow/airflow_modules
+      AIRFLOW__WEBSERVER__SECRET_KEY: "YourSuperSecretKeyHere"
+    command: bash -c "pip install -r ./requirements.txt && airflow db migrate && airflow scheduler"
+    networks:
+      - confluent
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: jasmine123
+      MONGO_INITDB_DATABASE: datalake
+
+  neo4j:
+    image: neo4j:latest
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      NEO4J_AUTH: neo4j/jasmine123
 
   postgres:
     image: postgres:14.0

@@ -4,7 +4,7 @@ import json
 import psycopg2
 
 client = MongoClient(MONGO_DB_URL)
-db = client['data_lake']
+db = client['mongodb_datalake']
 
 def save_to_data_lake(product, collection_name):
     collection = db[collection_name]

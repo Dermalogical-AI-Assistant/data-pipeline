@@ -14,7 +14,8 @@ default_args = {
 
 def crawl_lookfantastic_product_list():
     from airflow_modules.crawl.lookfantastic.crawl_product_list import crawl_product_list
-    crawl_product_list()    
+    # crawl_product_list()    
+    print('Done')
     
 def crawl_lookfantastic_product_detail():
     from airflow_modules.crawl.lookfantastic.crawl_product import crawl_pages_by_url

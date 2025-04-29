@@ -13,9 +13,9 @@ load_dotenv()
 
 MONGO_DB_URL = os.getenv('MONGO_DB_URL')
 client = MongoClient(MONGO_DB_URL)
-db = client['datalake']
+# db = client['data_lake']
+db = client['mongodb_datalake']
 
 collection = db['product_list']
-collection.insert_one({'person': 'Jasmine'})
-for x in collection.find():
-    print(x)
+count = collection.count_documents({}) #Count all documents
+print(f"Number of documents in collection: {count}")

@@ -1,6 +1,9 @@
 services:
   webserver:
-    image: apache/airflow:2.7.0-python3.10
+    # image: apache/airflow:2.7.0-python3.10
+    build:
+      context: dockerfiles
+      dockerfile: Dockerfile.webserver
     command: webserver
     depends_on:
       - postgres
@@ -59,15 +62,6 @@ services:
     command: bash -c "pip install -r ./requirements.txt && airflow db migrate && airflow scheduler"
     networks:
       - confluent
-
-  mongodb:
-    image: mongo:latest
-    ports:
-      - "27017:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: jasmine123
-      MONGO_INITDB_DATABASE: datalake
 
   neo4j:
     image: neo4j:latest

@@ -1,0 +1,52 @@
+FROM apache/airflow:2.9.0-python3.10
+
+USER root
+
+# 1. First install dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    wget \
+    unzip \
+    ca-certificates \
+    # Chrome dependencies
+    libnss3 \
+    libgbm1 \
+    libasound2 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdbus-1-3 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxrandr2 \
+    libwayland-client0 \
+    libgtk-3-0 \
+    gnupg \
+    libgconf-2-4 \
+    dbus-x11\
+    && rm -rf /var/lib/apt/lists/*
+
+# 2. Install Chrome for Testing (matches ChromeDriver automatically)
+RUN CHROME_VERSION="136.0.7103.59" && \
+    wget -q https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/${CHROME_VERSION}/linux64/chrome-linux64.zip -O /tmp/chrome.zip && \
+    unzip /tmp/chrome.zip -d /opt && \
+    ln -s /opt/chrome-linux64/chrome /usr/bin/google-chrome-stable && \
+    wget -q https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/${CHROME_VERSION}/linux64/chromedriver-linux64.zip -O /tmp/chromedriver.zip && \
+    unzip /tmp/chromedriver.zip -d /usr/local/bin/ && \
+    ln -s /usr/local/bin/chromedriver-linux64/chromedriver /usr/local/bin/chromedriver && \
+    chmod -R 755 /opt/chrome-linux64 /usr/local/bin/chromedriver* && \
+    rm /tmp/chrome.zip /tmp/chromedriver.zip
+
+# 3. Verify installations
+RUN google-chrome-stable --version && chromedriver --version
+
+# Clean up
+RUN apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* chromedriver_linux64.zip
+
+USER airflow
+
+# Set Environment Variables
+ENV PATH="$PATH:/usr/local/bin"

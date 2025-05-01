@@ -1,9 +1,8 @@
 services:
   webserver:
-    # image: apache/airflow:2.7.0-python3.10
     build:
       context: dockerfiles
-      dockerfile: Dockerfile.webserver
+      dockerfile: Dockerfile.airflow
     command: webserver
     depends_on:
       - postgres
@@ -44,7 +43,9 @@ services:
       - confluent
 
   scheduler:
-    image: apache/airflow:2.6.0-python3.9
+    build:
+      context: dockerfiles
+      dockerfile: Dockerfile.airflow
     depends_on:
       webserver:
         condition: service_healthy
@@ -62,14 +63,6 @@ services:
     command: bash -c "pip install -r ./requirements.txt && airflow db migrate && airflow scheduler"
     networks:
       - confluent
-
-  neo4j:
-    image: neo4j:latest
-    ports:
-      - "7474:7474"
-      - "7687:7687"
-    environment:
-      NEO4J_AUTH: neo4j/jasmine123
 
   postgres:
     image: postgres:14.0

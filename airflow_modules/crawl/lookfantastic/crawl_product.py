@@ -1,10 +1,14 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-import time
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.service import Service
 from selenium.common.exceptions import NoSuchElementException
+import time
 from airflow_modules.crawl.utils import save_batch_to_data_lake, get_products_by_url
+import shutil
+import os
+import tempfile
 
 def get_component_need_scrolling(selenium_driver, data_tracking_push, aria_labelledby):
     try:
@@ -29,7 +33,18 @@ def get_component_need_scrolling(selenium_driver, data_tracking_push, aria_label
         return None
            
 def crawl_pages_by_url(page_url):
-    selenium_driver = webdriver.Chrome()
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')  
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    user_data_dir = tempfile.mkdtemp( )# Create a temporary unique user data directory
+    options.add_argument(f"--user-data-dir={user_data_dir}")
+    options.binary_location = "/usr/bin/google-chrome-stable"
+
+    driver_path = shutil.which("chromedriver")
+    driver_path = "/usr/local/bin/chromedriver"
+    service = Service(executable_path=driver_path)
+    selenium_driver = webdriver.Chrome(service=service, options=options)
     selenium_driver.get(page_url)
     
     try:

@@ -43,7 +43,7 @@ with DAG(
     "daily_crawl",
     default_args=default_args,
     schedule=timedelta(days=1, hours=11, minutes=50),  
-    catchup=True
+    catchup=False
 ) as dag:
     task_crawl_lookfantastic_product_list = PythonOperator(
         task_id='daily_crawl_lookfantastic_product_list',

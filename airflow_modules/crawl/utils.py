@@ -2,9 +2,16 @@ from pymongo import MongoClient
 from airflow_modules.common.constant import MONGO_DB_URL, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST, POSTGRES_DB, COSMETICS_PRODUCT_TABLE
 import json
 import psycopg2
+from datetime import date
 
 client = MongoClient(MONGO_DB_URL)
-db = client['mongodb_datalake']
+db = client['data_lake']
+
+def refresh_data_lake():
+    collection_product_list = db['product_list']
+    collection_product_list.delete_many({})
+    collection_product_detail = db['product_detail']
+    collection_product_detail.delete_many({})
 
 def save_to_data_lake(product, collection_name):
     collection = db[collection_name]
@@ -46,7 +53,7 @@ def get_distinct_urls_postgres():
 
     cur = conn.cursor()
 
-    cur.execute(f"SELECT DISTINCT url FROM {COSMETICS_PRODUCT_TABLE};")
+    cur.execute(f"SELECT DISTINCT url FROM {COSMETICS_PRODUCT_TABLE} WHERE collected_day::date = '{date.today().isoformat()}';")
     distinct_urls_postgres = cur.fetchall()
 
     distinct_urls_postgres = [url[0] for url in distinct_urls_postgres]

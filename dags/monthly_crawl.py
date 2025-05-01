@@ -8,18 +8,21 @@ sys.path.append("/opt/airflow")
 
 default_args = {
     'owner': 'Jasmine-DATN',
-    'start_date': datetime(2025, 4, 10, 10, 00),
+    'start_date': datetime(2025, 4, 1, 10, 00),
     'retries': 1,
 }
 
 def crawl_lookfantastic_product_list():
+    from airflow_modules.crawl.utils import refresh_data_lake
     from airflow_modules.crawl.lookfantastic.crawl_product_list import crawl_product_list
+    refresh_data_lake()
     crawl_product_list()    
     
 def crawl_lookfantastic_product_detail():
     from airflow_modules.crawl.lookfantastic.crawl_product import crawl_pages_by_url
-    from airflow_modules.crawl.utils import get_uncrawled_page_urls, get_unsuccessful_urls
+    from airflow_modules.crawl.utils import get_uncrawled_page_urls, get_unsuccessful_urls, refresh_data_lake
     
+    refresh_data_lake()
     uncrawled_page_urls = get_uncrawled_page_urls()
     unsuccessful_urls = get_unsuccessful_urls()
     
@@ -39,18 +42,18 @@ def crawl_lookfantastic_product_detail():
         save_to_db(pages=pages)
     
 with DAG(
-    "cosmetics_automation",
+    "monthly_crawl",
     default_args=default_args,
     schedule="@monthly",
     catchup=False
 ) as dag:
     task_crawl_lookfantastic_product_list = PythonOperator(
-        task_id='crawl_lookfantastic_product_list',
+        task_id='monthly_crawl_lookfantastic_product_list',
         python_callable=crawl_lookfantastic_product_list
     )
     
     task_crawl_lookfantastic_product_detail = PythonOperator(
-        task_id='crawl_lookfantastic_product_detail',
+        task_id='monthly_crawl_lookfantastic_product_detail',
         python_callable=crawl_lookfantastic_product_detail
     )
     

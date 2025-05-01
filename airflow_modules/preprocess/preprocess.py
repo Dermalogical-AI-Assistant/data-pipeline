@@ -11,8 +11,7 @@ def preprocess_pages(pages):
     return pages
 
 def save_to_db(pages):
-    # write_products_to_postgres(pages=pages)
-
+    write_products_to_postgres(pages=pages)
     product = pages[0]
     product['skincare_concern'] = [p['skincare_concern'] for p in pages]
     import json

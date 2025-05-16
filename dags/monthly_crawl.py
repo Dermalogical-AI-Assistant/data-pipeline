@@ -9,21 +9,23 @@ sys.path.append("/opt/airflow")
 default_args = {
     'owner': 'Jasmine-DATN',
     'start_date': datetime(2025, 4, 1, 10, 00),
-    'retries': 1,
+    'retries': 10,
 }
 
 def crawl_lookfantastic_product_list():
-    from airflow_modules.crawl.utils import refresh_data_lake
     from airflow_modules.crawl.lookfantastic.crawl_product_list import crawl_product_list
-    # refresh_data_lake()
-    crawl_product_list()    
+    crawl_product_list()  
     
 def crawl_lookfantastic_product_detail():
     from airflow_modules.crawl.lookfantastic.crawl_product import crawl_pages_by_url
     from airflow_modules.crawl.utils import get_uncrawled_page_urls, get_unsuccessful_urls
+    from airflow_modules.crawl.utils import get_uncrawled_page_urls, get_unsuccessful_urls
     
     uncrawled_page_urls = get_uncrawled_page_urls()
     unsuccessful_urls = get_unsuccessful_urls()
+    
+    print(f'len uncrawled_page_urls = {len(uncrawled_page_urls)}')
+    print(f'len unsuccessful_urls = {len(unsuccessful_urls)}')
     
     for page_url in uncrawled_page_urls:
         print(f"Crawling: {page_url}")

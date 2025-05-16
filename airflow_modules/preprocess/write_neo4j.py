@@ -1,6 +1,7 @@
 from common.constant import NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD
 from preprocess.utils import convert_obj_to_string
 from neo4j import GraphDatabase
+import json
 
 class Neo4jConnector:
     def __init__(self):
@@ -20,7 +21,8 @@ class Neo4jConnector:
             session.write_transaction(self._create_product_node, product_data)
             
             analysis = product_data.get('ingredients_analysis')
-            
+            print(f'analysis = {json.dumps(analysis, indent=4)}')
+
             # Create Ingredients and Relationships
             if analysis and isinstance(analysis, dict) :
                 session.write_transaction(self._process_ingredients, product_data['url'], analysis)
@@ -37,7 +39,7 @@ class Neo4jConnector:
                 p.img = $img,
                 p.title = $title,
                 p.price = $price,
-                p.skincare_concern = COALESCE(p.skincare_concern, []) + $skincare_concern,
+                p.skincare_concern = apoc.coll.toSet(COALESCE(p.skincare_concern, []) + $skincare_concern),
                 p.description = $description,
                 p.how_to_use = $how_to_use,
                 p.ingredient_benefits = $ingredient_benefits,
@@ -106,11 +108,16 @@ class Neo4jConnector:
                 CREATE_HARMFUL_RELATIONSHIP_QUERY = """
                     MATCH (p:Product {url: $product_url})
                     MATCH (i:Ingredient {title: $ingredient_title})
-                    MERGE (p)-[r:HARMFUL]->(i)
-                    SET r.type =$type,
-                        r.title = $title,
-                        r.description = $description,
-                        r.updated_at = timestamp()
+                    OPTIONAL MATCH (p)-[existing:HARMFUL]->(i)
+                    WHERE existing.title = $title
+                    FOREACH (_ IN CASE WHEN existing IS NULL THEN [1] ELSE [] END |
+                        CREATE (p)-[:HARMFUL {
+                        title: $title,
+                        type: $type,
+                        description: $description,
+                        updated_at: timestamp()
+                        }]->(i)
+                    )
                 """
                 tx.run(CREATE_HARMFUL_RELATIONSHIP_QUERY,
                     product_url=product_url,
@@ -126,11 +133,16 @@ class Neo4jConnector:
                 CREATE_POSITIVE_RELATIONSHIP_QUERY = """
                     MATCH (p:Product {url: $product_url})
                     MATCH (i:Ingredient {title: $ingredient_title})
-                    MERGE (p)-[r:POSITIVE]->(i)
-                    SET r.type =$type,
-                        r.title = $title,
-                        r.description = $description,
-                        r.updated_at = timestamp()
+                    OPTIONAL MATCH (p)-[existing:POSITIVE]->(i)
+                    WHERE existing.title = $title
+                    FOREACH (_ IN CASE WHEN existing IS NULL THEN [1] ELSE [] END |
+                        CREATE (p)-[:POSITIVE {
+                        title: $title,
+                        type: $type,
+                        description: $description,
+                        updated_at: timestamp()
+                        }]->(i)
+                    )
                 """
                 tx.run(CREATE_POSITIVE_RELATIONSHIP_QUERY,
                     product_url=product_url,
@@ -146,10 +158,15 @@ class Neo4jConnector:
                 CREATE_NOTABLE_RELATIONSHIP_QUERY = """
                     MATCH (p:Product {url: $product_url})
                     MATCH (i:Ingredient {title: $ingredient_title})
-                    MERGE (p)-[r:NOTABLE]->(i)
-                    SET r.type =$type,
-                        r.title = $title,
-                        r.updated_at = timestamp()
+                    OPTIONAL MATCH (p)-[existing:NOTABLE]->(i)
+                    WHERE existing.title = $title
+                    FOREACH (_ IN CASE WHEN existing IS NULL THEN [1] ELSE [] END |
+                        CREATE (p)-[:NOTABLE {
+                        title: $title,
+                        type: $type,
+                        updated_at: timestamp()
+                        }]->(i)
+                    )
                 """
                 tx.run(CREATE_NOTABLE_RELATIONSHIP_QUERY,
                     product_url=product_url,
@@ -174,7 +191,7 @@ def write_product_to_neo4j(product):
         "full_ingredients_list": product["full_ingredients_list"],
         "ingredients_analysis": product["ingredients_analysis"]
     }
-    
+
     neo4j.create_product_graph(product_data)
     
     neo4j.close()

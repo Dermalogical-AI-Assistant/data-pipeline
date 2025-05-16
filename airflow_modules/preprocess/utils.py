@@ -48,8 +48,7 @@ def preprocess_ingredients(full_ingredients):
     return ', '.join(ingredients)
 
 def get_ingredients_analysis(full_ingredients):
-    print(f'full_ingredients={full_ingredients}')
-    if not full_ingredients or full_ingredients!='null':
+    if not full_ingredients or full_ingredients=='null':
         return None
     data = {
         'ingredients': full_ingredients
@@ -58,7 +57,7 @@ def get_ingredients_analysis(full_ingredients):
     result = result.json()
     result = result['analysis']
     preprocessed_data = preprocess_ingredients_analysis(result)
-    return str(preprocessed_data)
+    return preprocessed_data
 
 def preprocess_ingredients_analysis(data):
     data['text'] = preprocess_html_content(data['text'])

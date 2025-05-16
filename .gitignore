@@ -3,9 +3,10 @@ __pycache__
 .idea
 .env
 crawl/data
-venv10
+myenv
 logs/
 webserver_config.py
 airflow.cfg
 airflow-webserver.pid
 note.txt
+csv

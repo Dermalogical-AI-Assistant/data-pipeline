@@ -7,8 +7,8 @@ from selenium.common.exceptions import NoSuchElementException
 import time
 from airflow_modules.crawl.utils import save_batch_to_data_lake, get_products_by_url
 import shutil
-import os
 import tempfile
+from datetime import date
 
 def get_component_need_scrolling(selenium_driver, data_tracking_push, aria_labelledby):
     try:
@@ -81,10 +81,12 @@ def crawl_pages_by_url(page_url):
                 'description': description,
                 'how_to_use': how_to_use,
                 'ingredient_benefits': ingredient_benefits,
-                'full_ingredients_list': full_ingredients_list
+                'full_ingredients_list': full_ingredients_list,
+                'collected_day': date.today().isoformat()
             }
             data.append(product_detail)
         save_batch_to_data_lake(data=data, collection_name='product_detail')
+        save_batch_to_data_lake(data=data, collection_name='product_all')
         
     finally:
         # 4. Close the browser

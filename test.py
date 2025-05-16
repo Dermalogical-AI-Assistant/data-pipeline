@@ -1,21 +1,8 @@
-from pymongo import MongoClient
-from dotenv import load_dotenv
-import os
+from airflow_modules.crawl.utils import get_uncrawled_page_urls, get_unsuccessful_urls, db
+    
+uncrawled_page_urls = get_uncrawled_page_urls()
+unsuccessful_urls = get_unsuccessful_urls()
+print(f'len uncrawled_page_urls = {len(uncrawled_page_urls)}')
+print(f'len unsuccessful_urls = {len(unsuccessful_urls)}')
 
-load_dotenv()
-
-# POSTGRES_HOST = os.getenv('POSTGRES_HOST')
-# POSTGRES_URL = os.getenv('POSTGRES_URL')
-# POSTGRES_USER = os.getenv('POSTGRES_USER')
-# POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD')
-# POSTGRES_DB = os.getenv('POSTGRES_DB')
-# COSMETICS_PRODUCT_TABLE = 'products'
-
-MONGO_DB_URL = os.getenv('MONGO_DB_URL')
-client = MongoClient(MONGO_DB_URL)
-# db = client['data_lake']
-db = client['mongodb_datalake']
-
-collection = db['product_list']
-count = collection.count_documents({}) #Count all documents
-print(f"Number of documents in collection: {count}")
+# print(db['product_list'].count_documents({}))

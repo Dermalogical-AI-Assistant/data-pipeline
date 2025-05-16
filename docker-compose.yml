@@ -13,6 +13,7 @@ services:
       PYTHONPATH: /opt/airflow:/opt/airflow/airflow_modules
       AIRFLOW_VAR_FROM_FILE: /opt/airflow/.env
       AIRFLOW__WEBSERVER__SECRET_KEY: "YourSuperSecretKeyHere"
+      # AIRFLOW__LOGGING__REMOTE_LOGGING: 'False'
     logging:
       options:
         max-size: 10m
@@ -60,6 +61,7 @@ services:
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
       PYTHONPATH: /opt/airflow:/opt/airflow/airflow_modules
       AIRFLOW__WEBSERVER__SECRET_KEY: "YourSuperSecretKeyHere"
+      # AIRFLOW__LOGGING__REMOTE_LOGGING: 'False'
     command: bash -c "pip install -r ./requirements.txt && airflow db migrate && airflow scheduler"
     networks:
       - confluent

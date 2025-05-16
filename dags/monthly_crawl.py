@@ -13,17 +13,16 @@ default_args = {
 }
 
 def crawl_lookfantastic_product_list():
-    from airflow_modules.crawl.utils import refresh_data_lake
     from airflow_modules.crawl.lookfantastic.crawl_product_list import crawl_product_list
-    # refresh_data_lake()
-    crawl_product_list()    
+    crawl_product_list()  
+    print("Done")
     
 def crawl_lookfantastic_product_detail():
     from airflow_modules.crawl.lookfantastic.crawl_product import crawl_pages_by_url
-    from airflow_modules.crawl.utils import get_uncrawled_page_urls, get_unsuccessful_urls
+    from airflow_modules.crawl.utils import get_uncrawled_page_urls
     
     uncrawled_page_urls = get_uncrawled_page_urls()
-    unsuccessful_urls = get_unsuccessful_urls()
+    print(f'len uncrawled_page_urls = {len(uncrawled_page_urls)}')
     
     for page_url in uncrawled_page_urls:
         print(f"Crawling: {page_url}")
@@ -32,14 +31,18 @@ def crawl_lookfantastic_product_detail():
         pages = preprocess_pages(pages)
         print(f"Saving to db: {page_url}")
         save_to_db(pages=pages)
-        
-    for page_url in unsuccessful_urls:
-        pages= get_mongo_product_details_by_url(page_url)
-        print(f"Preprocessing: {page_url}")
-        pages = preprocess_pages(pages)
-        print(f"Saving to db: {page_url}")
-        save_to_db(pages=pages)
-    
+
+    # unsuccessful_urls = get_unsuccessful_urls()
+    # print(f'len unsuccessful_urls = {len(unsuccessful_urls)}')
+    # for page_url in unsuccessful_urls:
+    #     pages= get_mongo_product_details_by_url(page_url)
+    #     print(f"Preprocessing: {page_url}")
+    #     pages = preprocess_pages(pages)
+    #     print(f"Saving to db: {page_url}")
+    #     save_to_db(pages=pages)
+
+    print("Done")
+
 with DAG(
     "monthly_crawl",
     default_args=default_args,

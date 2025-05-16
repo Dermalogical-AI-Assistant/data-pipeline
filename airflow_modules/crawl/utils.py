@@ -7,12 +7,6 @@ from datetime import date
 client = MongoClient(MONGO_DB_URL)
 db = client['data_lake']
 
-def refresh_data_lake():
-    collection_product_list = db['product_list']
-    collection_product_list.delete_many({})
-    collection_product_detail = db['product_detail']
-    collection_product_detail.delete_many({})
-
 def save_to_data_lake(product, collection_name):
     collection = db[collection_name]
     existing_product = collection.find_one(product)
@@ -53,7 +47,16 @@ def get_distinct_urls_postgres():
 
     cur = conn.cursor()
 
-    cur.execute(f"SELECT DISTINCT url FROM {COSMETICS_PRODUCT_TABLE} WHERE collected_day::date = '{date.today().isoformat()}';")
+    current_month = date.today().month
+    current_year = date.today().year
+
+    query = f"""
+        SELECT DISTINCT url 
+        FROM {COSMETICS_PRODUCT_TABLE} 
+        WHERE EXTRACT(MONTH FROM collected_day::date) = {current_month}
+        AND EXTRACT(YEAR FROM collected_day::date) = {current_year};
+    """
+    cur.execute(query=query)
     distinct_urls_postgres = cur.fetchall()
 
     distinct_urls_postgres = [url[0] for url in distinct_urls_postgres]
@@ -62,12 +65,12 @@ def get_distinct_urls_postgres():
     conn.close()
     return distinct_urls_postgres
 
-def get_unsuccessful_urls():
-    collection = db["product_detail"]
-    distinct_urls_product_detail = collection.distinct("url")
-    distinct_urls_postgres = get_distinct_urls_postgres()
-    unsuccessful_urls = list(set(distinct_urls_product_detail) - set(distinct_urls_postgres))
-    return unsuccessful_urls 
+# def get_unsuccessful_urls():
+#     collection = db["product_detail"]
+#     distinct_urls_product_detail = collection.distinct("url")
+#     distinct_urls_postgres = get_distinct_urls_postgres()
+#     unsuccessful_urls = list(set(distinct_urls_product_detail) - set(distinct_urls_postgres))
+#     return unsuccessful_urls 
 
 def get_products_by_url(url):
     collection = db['product_list']

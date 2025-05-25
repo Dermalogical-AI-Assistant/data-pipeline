@@ -2,7 +2,6 @@ from datetime import datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow_modules.preprocess.preprocess import preprocess_pages, save_to_db
-from airflow_modules.crawl.utils import get_mongo_product_details_by_url
 import sys
 sys.path.append("/opt/airflow")
 
@@ -43,6 +42,11 @@ def crawl_lookfantastic_product_detail():
 
     print("Done")
 
+def create_vector_index():
+    from airflow_modules.preprocess.create_vector_index import create_vector_index_neo4j
+    create_vector_index_neo4j()
+    print("Done")
+
 with DAG(
     "monthly_crawl",
     default_args=default_args,
@@ -59,4 +63,8 @@ with DAG(
         python_callable=crawl_lookfantastic_product_detail
     )
     
-    task_crawl_lookfantastic_product_list >> task_crawl_lookfantastic_product_detail
+    task_create_vector_index = PythonOperator(
+        task_id='create_vector_index',
+        python_callable=create_vector_index
+    )
+    task_crawl_lookfantastic_product_list >> task_crawl_lookfantastic_product_detail >> task_create_vector_index

@@ -1,17 +1,23 @@
 import psycopg2
 from psycopg2.extras import execute_values
-from common.constant import POSTGRES_DB, POSTGRES_HOST, POSTGRES_USER, POSTGRES_PASSWORD
 from datetime import date
 
-connection_params = {
-    "dbname": POSTGRES_DB,
-    "user": POSTGRES_USER,
-    "password": POSTGRES_PASSWORD,
-    "host": POSTGRES_HOST,
-    "port": "5432"
-}
+def get_connection_params():
+    from common.constant import POSTGRES_DB, POSTGRES_HOST, POSTGRES_USER, POSTGRES_PASSWORD
+
+    connection_params = {
+        "dbname": POSTGRES_DB,
+        "user": POSTGRES_USER,
+        "password": POSTGRES_PASSWORD,
+        "host": POSTGRES_HOST,
+        "port": "5432"
+    }
+
+    return connection_params
 
 def write_products_to_postgres(pages):
+    connection_params = get_connection_params()
+
     columns_to_insert = [
         "_id", "img", "title", "price", "url", "skincare_concern",
         "description", "how_to_use", "ingredient_benefits",

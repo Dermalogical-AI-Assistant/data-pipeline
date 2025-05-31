@@ -13,6 +13,11 @@ services:
       PYTHONPATH: /opt/airflow:/opt/airflow/airflow_modules
       AIRFLOW_VAR_FROM_FILE: /opt/airflow/.env
       AIRFLOW__WEBSERVER__SECRET_KEY: "YourSuperSecretKeyHere"
+      MONGO_DB_URL: ${MONGO_DB_URL}
+      COSMILY_ANALYZE_URL: ${COSMILY_ANALYZE_URL}
+      NEO4J_URI: ${NEO4J_URI}
+      NEO4J_USERNAME: ${NEO4J_USERNAME}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD}
       # AIRFLOW__LOGGING__REMOTE_LOGGING: 'False'
     logging:
       options:
@@ -22,7 +27,6 @@ services:
       - ./airflow_modules:/opt/airflow/airflow_modules  
       - ./dags:/opt/airflow/dags
       - ./requirements.txt:/opt/airflow/requirements.txt
-      - ./.env:/opt/airflow/.env
     ports:
       - "8080:8080"
     entrypoint: >
@@ -54,13 +58,17 @@ services:
       - ./airflow_modules:/opt/airflow/airflow_modules  
       - ./dags:/opt/airflow/dags
       - ./requirements.txt:/opt/airflow/requirements.txt
-      - ./.env:/opt/airflow/.env
     environment:
       AIRFLOW__CORE__EXECUTOR: SequentialExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
       PYTHONPATH: /opt/airflow:/opt/airflow/airflow_modules
       AIRFLOW__WEBSERVER__SECRET_KEY: "YourSuperSecretKeyHere"
+      MONGO_DB_URL: ${MONGO_DB_URL}
+      COSMILY_ANALYZE_URL: ${COSMILY_ANALYZE_URL}
+      NEO4J_URI: ${NEO4J_URI}
+      NEO4J_USERNAME: ${NEO4J_USERNAME}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD}
       # AIRFLOW__LOGGING__REMOTE_LOGGING: 'False'
     command: bash -c "pip install -r ./requirements.txt && airflow db migrate && airflow scheduler"
     networks:

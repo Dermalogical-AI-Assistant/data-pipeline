@@ -13,7 +13,7 @@ default_args = {
 
 def crawl_lookfantastic_product_list():
     from airflow_modules.crawl.lookfantastic.crawl_product_list import crawl_product_list
-    crawl_product_list()  
+    # crawl_product_list()  
     print("Done")
     
 def crawl_lookfantastic_product_detail():
@@ -30,15 +30,6 @@ def crawl_lookfantastic_product_detail():
         pages = preprocess_pages(pages)
         print(f"Saving to db: {page_url}")
         save_to_db(pages=pages)
-
-    # unsuccessful_urls = get_unsuccessful_urls()
-    # print(f'len unsuccessful_urls = {len(unsuccessful_urls)}')
-    # for page_url in unsuccessful_urls:
-    #     pages= get_mongo_product_details_by_url(page_url)
-    #     print(f"Preprocessing: {page_url}")
-    #     pages = preprocess_pages(pages)
-    #     print(f"Saving to db: {page_url}")
-    #     save_to_db(pages=pages)
 
     print("Done")
 

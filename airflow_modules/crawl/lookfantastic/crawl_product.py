@@ -37,10 +37,19 @@ def crawl_pages_by_url(page_url):
     options.add_argument('--headless')  
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
-    user_data_dir = tempfile.mkdtemp( )# Create a temporary unique user data directory
+    user_data_dir = tempfile.mkdtemp(prefix='chrome_')# Create a temporary unique user data directory
     options.add_argument(f"--user-data-dir={user_data_dir}")
-    options.binary_location = "/usr/bin/google-chrome-stable"
+    options.add_argument('--disable-gpu')  # Disable GPU hardware acceleration (important for headless mode)
+    options.add_argument('--disable-software-rasterizer')
+    options.add_argument('--window-size=1920,1080')  # Set a standard window size
+    options.add_argument('--disable-extensions')
+    options.add_argument('--disable-infobars')
+    options.add_argument('--disable-browser-side-navigation')
+    options.add_argument('--disable-features=VizDisplayCompositor')  # Avoid renderer crashes
+    options.add_argument('--remote-debugging-port=9222')  # Avoid "Unable to receive message from renderer" errors
 
+    options.binary_location = "/usr/bin/google-chrome-stable"
+    
     driver_path = shutil.which("chromedriver")
     driver_path = "/usr/local/bin/chromedriver"
     service = Service(executable_path=driver_path)
@@ -91,5 +100,11 @@ def crawl_pages_by_url(page_url):
     finally:
         # 4. Close the browser
         selenium_driver.quit()
+
+        try:
+            shutil.rmtree(user_data_dir, ignore_errors=True)
+        except Exception as e:
+            print(f"Error cleaning up temp dir: {str(e)}")
+
     return data
         

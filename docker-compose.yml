@@ -13,12 +13,11 @@ services:
       PYTHONPATH: /opt/airflow:/opt/airflow/airflow_modules
       AIRFLOW_VAR_FROM_FILE: /opt/airflow/.env
       AIRFLOW__WEBSERVER__SECRET_KEY: "YourSuperSecretKeyHere"
-      MONGO_DB_URL: ${MONGO_DB_URL}
-      COSMILY_ANALYZE_URL: ${COSMILY_ANALYZE_URL}
-      NEO4J_URI: ${NEO4J_URI}
-      NEO4J_USERNAME: ${NEO4J_USERNAME}
-      NEO4J_PASSWORD: ${NEO4J_PASSWORD}
-      # AIRFLOW__LOGGING__REMOTE_LOGGING: 'False'
+      FLASK_LIMITER_STORAGE_URI: redis://redis:6379
+      AIRFLOW__LOGGING__REMOTE_LOGGING: 'True'
+      AIRFLOW__LOGGING__REMOTE_BASE_LOG_FOLDER: gs://tdcosmetic-storage
+      AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID: gcs_default
+      GOOGLE_APPLICATION_CREDENTIALS: /opt/airflow/tdcosmetics-gcp-service-account.json
     logging:
       options:
         max-size: 10m
@@ -27,6 +26,7 @@ services:
       - ./airflow_modules:/opt/airflow/airflow_modules  
       - ./dags:/opt/airflow/dags
       - ./requirements.txt:/opt/airflow/requirements.txt
+      - ./tdcosmetics-gcp-service-account.json:/opt/airflow/tdcosmetics-gcp-service-account.json
     ports:
       - "8080:8080"
     entrypoint: >
@@ -36,6 +36,7 @@ services:
         pip install -r /opt/airflow/requirements.txt && \
         /home/airflow/.local/bin/airflow db init && \
         /home/airflow/.local/bin/airflow users create --username admin --firstname admin --lastname admin --role Admin --email admin@example.com --password admin && \
+        /home/airflow/.local/bin/airflow connections get gcs_default > /dev/null 2>&1 || /home/airflow/.local/bin/airflow connections add 'gcs_default' --conn-uri 'google-cloud-platform://?extra__google_cloud_platform__key_path=%2Fopt%2Fairflow%2Ftdcosmetics-gcp-service-account.json&extra__google_cloud_platform__project=ultra-hangar-461504-d9' && \ 
         /home/airflow/.local/bin/airflow db migrate && \
         exec /home/airflow/.local/bin/airflow webserver
       "
@@ -58,19 +59,25 @@ services:
       - ./airflow_modules:/opt/airflow/airflow_modules  
       - ./dags:/opt/airflow/dags
       - ./requirements.txt:/opt/airflow/requirements.txt
+      - ./tdcosmetics-gcp-service-account.json:/opt/airflow/tdcosmetics-gcp-service-account.json
     environment:
       AIRFLOW__CORE__EXECUTOR: SequentialExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
       PYTHONPATH: /opt/airflow:/opt/airflow/airflow_modules
       AIRFLOW__WEBSERVER__SECRET_KEY: "YourSuperSecretKeyHere"
-      MONGO_DB_URL: ${MONGO_DB_URL}
-      COSMILY_ANALYZE_URL: ${COSMILY_ANALYZE_URL}
-      NEO4J_URI: ${NEO4J_URI}
-      NEO4J_USERNAME: ${NEO4J_USERNAME}
-      NEO4J_PASSWORD: ${NEO4J_PASSWORD}
-      # AIRFLOW__LOGGING__REMOTE_LOGGING: 'False'
-    command: bash -c "pip install -r ./requirements.txt && airflow db migrate && airflow scheduler"
+      AIRFLOW_VAR_FROM_FILE: /opt/airflow/.env
+      FLASK_LIMITER_STORAGE_URI: redis://redis:6379
+      AIRFLOW__LOGGING__REMOTE_LOGGING: 'True'
+      AIRFLOW__LOGGING__REMOTE_BASE_LOG_FOLDER: gs://tdcosmetic-storage
+      AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID: gcs_default
+      GOOGLE_APPLICATION_CREDENTIALS: /opt/airflow/tdcosmetics-gcp-service-account.json
+    command: > 
+      bash -c "pip install -r ./requirements.txt && \
+        airflow db migrate && \
+        airflow connections get gcs_default > /dev/null 2>&1 || airflow connections add 'gcs_default' --conn-uri 'google-cloud-platform://?extra__google_cloud_platform__key_path=%2Fopt%2Fairflow%2Ftdcosmetics-gcp-service-account.json&extra__google_cloud_platform__project=ultra-hangar-461504-d9' && \ 
+        airflow scheduler"
+
     networks:
       - confluent
 
@@ -93,6 +100,13 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - confluent
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
     networks:
       - confluent
 

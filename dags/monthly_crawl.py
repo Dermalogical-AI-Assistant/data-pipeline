@@ -13,7 +13,11 @@ default_args = {
 
 def crawl_lookfantastic_product_list():
     from airflow_modules.crawl.lookfantastic.crawl_product_list import crawl_product_list
-    # crawl_product_list()  
+    from airflow_modules.crawl.utils import reset_db
+    print("Crawling Lookfantastic product list...")
+    reset_db() 
+    crawl_product_list()
+    print("Crawling Lookfantastic product list...")
     print("Done")
     
 def crawl_lookfantastic_product_detail():

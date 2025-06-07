@@ -5,6 +5,10 @@ import json
 client = MongoClient(MONGO_DB_URL)
 db = client['data_lake']
 
+def reset_db():
+    db['product_list'].delete_many({})
+    db['product_detail'].delete_many({})
+
 def save_to_data_lake(product, collection_name):
     collection = db[collection_name]
     existing_product = collection.find_one(product)

@@ -7,7 +7,7 @@ services:
     depends_on:
       - postgres
     environment:
-      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
       PYTHONPATH: /opt/airflow:/opt/airflow/airflow_modules
@@ -18,6 +18,11 @@ services:
       AIRFLOW__LOGGING__REMOTE_BASE_LOG_FOLDER: gs://tdcosmetic-storage
       AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID: gcs_default
       GOOGLE_APPLICATION_CREDENTIALS: /opt/airflow/tdcosmetics-gcp-service-account.json
+      MONGO_DB_URL: ${MONGO_DB_URL}
+      COSMILY_ANALYZE_URL: ${COSMILY_ANALYZE_URL}
+      NEO4J_URI: ${NEO4J_URI}
+      NEO4J_USERNAME: ${NEO4J_USERNAME}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD}
     logging:
       options:
         max-size: 10m
@@ -61,7 +66,7 @@ services:
       - ./requirements.txt:/opt/airflow/requirements.txt
       - ./tdcosmetics-gcp-service-account.json:/opt/airflow/tdcosmetics-gcp-service-account.json
     environment:
-      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
       PYTHONPATH: /opt/airflow:/opt/airflow/airflow_modules
@@ -72,6 +77,11 @@ services:
       AIRFLOW__LOGGING__REMOTE_BASE_LOG_FOLDER: gs://tdcosmetic-storage
       AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID: gcs_default
       GOOGLE_APPLICATION_CREDENTIALS: /opt/airflow/tdcosmetics-gcp-service-account.json
+      MONGO_DB_URL: ${MONGO_DB_URL}
+      COSMILY_ANALYZE_URL: ${COSMILY_ANALYZE_URL}
+      NEO4J_URI: ${NEO4J_URI}
+      NEO4J_USERNAME: ${NEO4J_USERNAME}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD}
     command: > 
       bash -c "pip install -r ./requirements.txt && \
         airflow db migrate && \

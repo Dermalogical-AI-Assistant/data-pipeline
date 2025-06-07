@@ -10,3 +10,4 @@ airflow.cfg
 airflow-webserver.pid
 note.txt
 csv
+tdcosmetics-gcp-service-account.json
